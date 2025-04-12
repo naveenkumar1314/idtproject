@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Agri Investment - Connecting Investors with Farming Opportunities{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-dark text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold">Grow Your Investment Portfolio With Agriculture</h1>
+                <p class="lead mt-3">Smart Agri Investment connects you with high-potential farming opportunities, offering data-driven insights and real-time performance tracking.</p>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="{{ url_for('investment_opportunities') }}" class="btn btn-success btn-lg">Explore Opportunities</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">Start Investing</a>
+                </div>
+            </div>
+            <div class="col-md-6 mt-4 mt-md-0">
+                <div class="card bg-dark border-success">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 border-end border-success">
+                                <h2 class="text-success">15%</h2>
+                                <p class="text-muted">Average ROI</p>
+                            </div>
+                            <div class="col-6">
+                                <h2 class="text-success">24+</h2>
+                                <p class="text-muted">Active Farms</p>
+                            </div>
+                            <div class="col-6 border-end border-success border-top pt-3">
+                                <h2 class="text-success">$2.5M+</h2>
+                                <p class="text-muted">Total Investments</p>
+                            </div>
+                            <div class="col-6 border-top pt-3">
+                                <h2 class="text-success">500+</h2>
+                                <p class="text-muted">Happy Investors</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="mb-3">How Agri Investment Works</h2>
+        <p class="lead">A simple, transparent process to invest in agriculture</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-user-plus fa-2x text-success"></i>
+                    </div>
+                    <h4>Register</h4>
+                    <p class="text-muted">Create your account to access investment opportunities</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-search fa-2x text-success"></i>
+                    </div>
+                    <h4>Explore</h4>
+                    <p class="text-muted">Browse and analyze various farming projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-hand-holding-usd fa-2x text-success"></i>
+                    </div>
+                    <h4>Invest</h4>
+                    <p class="text-muted">Choose farms and invest the amount you want</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-chart-line fa-2x text-success"></i>
+                    </div>
+                    <h4>Track & Grow</h4>
+                    <p class="text-muted">Monitor performance and collect returns</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Opportunities Section -->
+<div class="bg-dark-subtle py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Featured Investment Opportunities</h2>
+            <a href="{{ url_for('investment_opportunities') }}" class="btn btn-outline-success">View All</a>
+        </div>
+        <div class="row g-4">
+            {% if opportunities %}
+                {% for opportunity in opportunities %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 shadow">
+                        <div class="card-body">
+                            <span class="badge bg-{{ 'success' if opportunity.risk_level == 'Low' else 'warning' if opportunity.risk_level == 'Medium' else 'danger' }} mb-2">
+                                {{ opportunity.risk_level }} Risk
+                            </span>
+                            <h5 class="card-title">{{ opportunity.title }}</h5>
+                            <p class="card-text text-muted small">{{ opportunity.farm.name }} | {{ opportunity.farm.location }}</p>
+                            
+                            <div class="my-3">
+                                <p class="mb-1 small">Funding: {{ "%.1f"|format(opportunity.funding_percentage()) }}%</p>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ opportunity.funding_percentage() }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <span class="d-block fw-bold">${{ "%.2f"|format(opportunity.amount_needed) }}</span>
+                                    <small class="text-muted">Total Needed</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="d-block fw-bold text-success">{{ "%.1f"|format(opportunity.expected_roi) }}%</span>
+                                    <small class="text-muted">Expected ROI</small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">Min: ${{ "%.2f"|format(opportunity.minimum_investment) }}</span>
+                                <span class="small text-muted">{{ opportunity.duration_months }} months</span>
+                            </div>
+                            
+                            <a href="{{ url_for('invest', opportunity_id=opportunity.id) }}" class="btn btn-success w-100 mt-3">Invest Now</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <p class="mb-0">No investment opportunities available at the moment. Please check back later.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Featured Farms Section -->
+<div class="container py-5">
+    <h2 class="mb-4">Featured Farms</h2>
+    <div class="row g-4">
+        {% if featured_farms %}
+            {% for farm in featured_farms %}
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm bg-dark">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                {% if farm.farm_type == 'Crop' %}
+                                <i class="fas fa-seedling fa-2x text-success"></i>
+                                {% elif farm.farm_type == 'Livestock' %}
+                                <i class="fas fa-horse fa-2x text-success"></i>
+                                {% else %}
+                                <i class="fas fa-tractor fa-2x text-success"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">{{ farm.name }}</h5>
+                                <small class="text-muted">{{ farm.location }}</small>
+                            </div>
+                        </div>
+                        <p class="card-text">{{ farm.description[:100] }}{% if farm.description|length > 100 %}...{% endif %}</p>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Farm Type</small>
+                                    <span>{{ farm.farm_type }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Size</small>
+                                    <span>{{ farm.size_hectares }} hectares</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Expected ROI</small>
+                                    <span class="text-success">{{ farm.expected_roi }}%</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Risk Level</small>
+                                    <span class="{{ 'text-success' if farm.risk_level == 'Low' else 'text-warning' if farm.risk_level == 'Medium' else 'text-danger' }}">{{ farm.risk_level }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('farm_detail', farm_id=farm.id) }}" class="btn btn-outline-success w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <p class="mb-0">No featured farms available at the moment. Please check back later.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Why Choose Us Section -->
+<div class="bg-dark-subtle py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="mb-4">Why Choose Smart Agri Investment?</h2>
+                <div class="mb-4">
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Data-Driven Decisions</h5>
+                            <p class="text-muted">Access comprehensive farm performance data and analytics to make informed investment decisions.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-shield-alt fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Risk Management</h5>
+                            <p class="text-muted">Our risk assessment tools help you understand and mitigate potential investment risks.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-sync-alt fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Real-Time Tracking</h5>
+                            <p class="text-muted">Monitor your investments in real-time with our comprehensive dashboard and reporting tools.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-leaf fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Sustainable Agriculture</h5>
+                            <p class="text-muted">Support sustainable farming practices while earning competitive returns on your investments.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 bg-dark shadow">
+                    <div class="card-body p-4">
+                        <h3 class="mb-4 text-center">Investment Performance</h3>
+                        <canvas id="performanceChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonials Section -->
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2>What Our Investors Say</h2>
+        <p class="lead text-muted">Hear from investors who have grown their portfolios with us</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text">"Smart Agri Investment has transformed how I invest in agriculture. The data analytics and transparency give me confidence in my investment decisions."</p>
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                            <span class="fw-bold">JD</span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">John Doe</h6>
+                            <small class="text-muted">Investing since 2020</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text">"As someone new to agricultural investments, the platform's intuitive interface and detailed farm performance metrics made it easy to get started and track my ROI."</p>
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                            <span class="fw-bold">JS</span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Jane Smith</h6>
+                            <small class="text-muted">Investing since 2021</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star-half-alt text-warning"></i>
+                    </div>
+                    <p class="card-text">"The risk assessment tools helped me diversify my agricultural investments across different farm types, resulting in a more balanced portfolio with consistent returns."</p>
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                            <span class="fw-bold">RJ</span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Robert Johnson</h6>
+                            <small class="text-muted">Investing since 2019</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="bg-success py-5">
+    <div class="container text-center text-white">
+        <h2 class="mb-3">Ready to Grow Your Investment in Agriculture?</h2>
+        <p class="lead mb-4">Join thousands of investors leveraging data-driven agricultural investments</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Start Investing Today</a>
+            <a href="{{ url_for('investment_opportunities') }}" class="btn btn-outline-light btn-lg">Explore Opportunities</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for the performance chart
+        const years = ['2018', '2019', '2020', '2021', '2022', '2023'];
+        const agricROI = [8.2, 9.1, 12.5, 14.3, 15.8, 16.2];
+        const stockMarketROI = [7.8, 8.2, 6.5, 10.2, 9.5, 10.1];
+        
+        // Create performance comparison chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Agricultural Investments',
+                        data: agricROI,
+                        borderColor: '#38b000',
+                        backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: 'Stock Market Average',
+                        data: stockMarketROI,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + '% ROI';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Return on Investment (%)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

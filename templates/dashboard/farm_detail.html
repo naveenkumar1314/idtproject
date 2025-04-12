@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block title %}{{ farm.name }} - Farm Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Farm Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-1">{{ farm.name }}</h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-map-marker-alt me-1"></i> {{ farm.location }}
+                <span class="mx-2">|</span>
+                <i class="fas fa-seedling me-1"></i> {{ farm.farm_type }}
+                <span class="mx-2">|</span>
+                <i class="fas fa-ruler-combined me-1"></i> {{ farm.size_hectares }} hectares
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('investment_opportunities') }}?farm_id={{ farm.id }}" class="btn btn-success">
+                <i class="fas fa-hand-holding-usd me-1"></i> Invest in this Farm
+            </a>
+        </div>
+    </div>
+    
+    <!-- Farm Overview Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-success bg-opacity-25">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Expected ROI</h6>
+                    <h3 class="text-success mb-0">{{ farm.expected_roi }}%</h3>
+                    <small class="text-muted">Annual return</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-info bg-opacity-25">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Current Funding</h6>
+                    <h3 class="text-info mb-0">${{ "%.2f"|format(farm.current_funding) }}</h3>
+                    <small class="text-muted">
+                        {{ "%.1f"|format(farm.funding_percentage()) }}% of ${{ "%.2f"|format(farm.total_funding_needed) }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-warning bg-opacity-25">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Risk Level</h6>
+                    <h3 class="mb-0 {{ 'text-success' if farm.risk_level == 'Low' else 'text-warning' if farm.risk_level == 'Medium' else 'text-danger' }}">
+                        {{ farm.risk_level }}
+                    </h3>
+                    <small class="text-muted">Based on historical data</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 bg-secondary bg-opacity-25">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Established</h6>
+                    <h3 class="mb-0">{{ farm.established_date.strftime('%Y') }}</h3>
+                    <small class="text-muted">{{ (farm.established_date.today() - farm.established_date).days // 365 }} years in operation</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-8">
+            <!-- Farm Description -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">About this Farm</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ farm.description }}</p>
+                    
+                    <hr>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-leaf me-2 text-success"></i>Farm Type</h6>
+                            <p>{{ farm.farm_type }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-ruler-combined me-2 text-success"></i>Size</h6>
+                            <p>{{ farm.size_hectares }} hectares</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-calendar-alt me-2 text-success"></i>Established</h6>
+                            <p>{{ farm.established_date.strftime('%B %d, %Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-map-marker-alt me-2 text-success"></i>Location</h6>
+                            <p>{{ farm.location }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Charts -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Farm Performance</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" data-chart="profits">Profits</button>
+                        <button type="button" class="btn btn-outline-secondary" data-chart="yields">Yields</button>
+                        <button type="button" class="btn btn-outline-secondary" data-chart="revenue-expense">Revenue & Expenses</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="250"></canvas>
+                </div>
+            </div>
+            
+            <!-- Weather Conditions Impact -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Environmental Factors & Impact</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Weather Conditions</th>
+                                    <th>Yield Impact</th>
+                                    <th>Revenue Impact</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Jan - Mar 2023</td>
+                                    <td>
+                                        <span class="badge bg-info">Rainy</span>
+                                        <span class="badge bg-secondary">Mild</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-success me-2">+12%</span>
+                                            <i class="fas fa-arrow-up text-success"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-success me-2">+8%</span>
+                                            <i class="fas fa-arrow-up text-success"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Apr - Jun 2023</td>
+                                    <td>
+                                        <span class="badge bg-warning">Drought</span>
+                                        <span class="badge bg-danger">Hot</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-danger me-2">-5%</span>
+                                            <i class="fas fa-arrow-down text-danger"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-danger me-2">-3%</span>
+                                            <i class="fas fa-arrow-down text-danger"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Jul - Sep 2023</td>
+                                    <td>
+                                        <span class="badge bg-success">Optimal</span>
+                                        <span class="badge bg-info">Moderate</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-success me-2">+15%</span>
+                                            <i class="fas fa-arrow-up text-success"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-success me-2">+18%</span>
+                                            <i class="fas fa-arrow-up text-success"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Funding Progress -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Funding Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="position-relative d-inline-block">
+                            <canvas id="fundingChart" width="200" height="200"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                <h3 class="mb-0">{{ "%.1f"|format(farm.funding_percentage()) }}%</h3>
+                                <small class="text-muted">Funded</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <h6 class="mb-0">${{ "%.2f"|format(farm.current_funding) }}</h6>
+                            <small class="text-muted">Current Funding</small>
+                        </div>
+                        <div class="text-end">
+                            <h6 class="mb-0">${{ "%.2f"|format(farm.total_funding_needed) }}</h6>
+                            <small class="text-muted">Total Needed</small>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ farm.funding_percentage() }}%" aria-valuenow="{{ farm.funding_percentage() }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="{{ url_for('investment_opportunities') }}?farm_id={{ farm.id }}" class="btn btn-success">Invest Now</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Investment Opportunities -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Current Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    {% if opportunities %}
+                        {% for opportunity in opportunities %}
+                        <div class="card mb-3 border-0 bg-dark">
+                            <div class="card-body">
+                                <span class="badge bg-{{ 'success' if opportunity.risk_level == 'Low' else 'warning' if opportunity.risk_level == 'Medium' else 'danger' }} mb-2">
+                                    {{ opportunity.risk_level }} Risk
+                                </span>
+                                <h5 class="card-title">{{ opportunity.title }}</h5>
+                                
+                                <div class="my-3">
+                                    <p class="mb-1 small">Funding: {{ "%.1f"|format(opportunity.funding_percentage()) }}%</p>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ opportunity.funding_percentage() }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>
+                                        <span class="d-block">${{ "%.2f"|format(opportunity.amount_needed) }}</span>
+                                        <small class="text-muted">Total Needed</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="d-block text-success">{{ "%.1f"|format(opportunity.expected_roi) }}%</span>
+                                        <small class="text-muted">Expected ROI</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="small text-muted">Min: ${{ "%.2f"|format(opportunity.minimum_investment) }}</span>
+                                    <span class="small text-muted">{{ opportunity.duration_months }} months</span>
+                                </div>
+                                
+                                <a href="{{ url_for('invest', opportunity_id=opportunity.id) }}" class="btn btn-success w-100">Invest Now</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <div class="mb-3">
+                                <i class="fas fa-exclamation-circle fa-3x text-muted"></i>
+                            </div>
+                            <p class="mb-0">No open investment opportunities for this farm at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Risk Assessment -->
+            <div class="card border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Risk Assessment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Overall Risk: <span class="{{ 'text-success' if farm.risk_level == 'Low' else 'text-warning' if farm.risk_level == 'Medium' else 'text-danger' }}">{{ farm.risk_level }}</span></h6>
+                        <div class="progress mb-3" style="height: 10px;">
+                            <div class="progress-bar {{ 'bg-success' if farm.risk_level == 'Low' else 'bg-warning' if farm.risk_level == 'Medium' else 'bg-danger' }}" 
+                                 role="progressbar" 
+                                 style="width: {{ '33%' if farm.risk_level == 'Low' else '66%' if farm.risk_level == 'Medium' else '100%' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Weather Risks</span>
+                            <span class="badge bg-warning">Medium</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Market Volatility</span>
+                            <span class="badge bg-success">Low</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Operational Risks</span>
+                            <span class="badge bg-success">Low</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Financial Stability</span>
+                            <span class="badge bg-success">Strong</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse the performance data from the server
+        const performanceData = {{ performance_data|safe }};
+        
+        // Initialize performance chart
+        initializePerformanceChart(performanceData);
+        
+        // Initialize funding progress chart
+        initializeFundingChart({{ farm.funding_percentage() }});
+        
+        // Add event listeners for chart type buttons
+        document.querySelectorAll('[data-chart]').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('[data-chart]').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                updateChartType(this.getAttribute('data-chart'), performanceData);
+            });
+        });
+    });
+    
+    function initializePerformanceChart(data) {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        window.performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [
+                    {
+                        label: 'Profit',
+                        data: data.profits,
+                        borderColor: '#38b000',
+                        backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Amount ($)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateChartType(chartType, data) {
+        switch(chartType) {
+            case 'profits':
+                window.performanceChart.data.datasets = [{
+                    label: 'Profit',
+                    data: data.profits,
+                    borderColor: '#38b000',
+                    backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                }];
+                break;
+                
+            case 'yields':
+                window.performanceChart.data.datasets = [{
+                    label: 'Yield',
+                    data: data.yields,
+                    borderColor: '#fd7e14',
+                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                }];
+                break;
+                
+            case 'revenue-expense':
+                window.performanceChart.data.datasets = [
+                    {
+                        label: 'Revenue',
+                        data: data.revenues,
+                        borderColor: '#0dcaf0',
+                        backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Expenses',
+                        data: data.expenses,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ];
+                break;
+        }
+        
+        window.performanceChart.update();
+    }
+    
+    function initializeFundingChart(percentage) {
+        const ctx = document.getElementById('fundingChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Funded', 'Remaining'],
+                datasets: [{
+                    data: [percentage, 100 - percentage],
+                    backgroundColor: ['#38b000', '#2b2f32'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '75%',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

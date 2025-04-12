@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}Investor Dashboard - Smart Agri Investment{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Investor Profile Card -->
+            <div class="card mb-4 border-0">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="bg-success bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-3x text-success"></i>
+                        </div>
+                        <h5 class="mb-1">{{ current_user.first_name }} {{ current_user.last_name }}</h5>
+                        <p class="text-muted mb-0">@{{ current_user.username }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Total Invested</span>
+                            <span class="fw-bold">${{ "%.2f"|format(total_invested) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Active Investments</span>
+                            <span class="fw-bold">{{ investments|length }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Member Since</span>
+                            <span class="fw-bold">{{ current_user.created_at.strftime('%b %Y') }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="{{ url_for('investment_opportunities') }}" class="btn btn-success">Explore New Opportunities</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Investment Summary Card -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Investment Summary</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="portfolioDistributionChart" height="200"></canvas>
+                    
+                    <hr>
+                    
+                    <h6 class="mb-3">Portfolio Distribution</h6>
+                    <div id="portfolioDistribution">
+                        <!-- This will be populated by JavaScript -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">&nbsp;</span>
+                                <span>Loading...</span>
+                            </div>
+                            <span>-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Investment Overview Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 bg-success bg-opacity-25">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="text-muted mb-2">Total Investment</h6>
+                                    <h3 class="mb-0">${{ "%.2f"|format(total_invested) }}</h3>
+                                </div>
+                                <div class="bg-success bg-opacity-25 rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-hand-holding-usd text-success fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge bg-success">
+                                    <i class="fas fa-arrow-up me-1"></i> 12.5% from last month
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 bg-info bg-opacity-25">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="text-muted mb-2">Projected Returns</h6>
+                                    <h3 class="mb-0">$<span id="projected-returns">Loading...</span></h3>
+                                </div>
+                                <div class="bg-info bg-opacity-25 rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-chart-line text-info fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge bg-info">
+                                    <i class="fas fa-percentage me-1"></i> <span id="avg-roi">-</span> Avg ROI
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 bg-warning bg-opacity-25">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="text-muted mb-2">Risk Assessment</h6>
+                                    <h3 class="mb-0" id="overall-risk">Calculating...</h3>
+                                </div>
+                                <div class="bg-warning bg-opacity-25 rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-shield-alt text-warning fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="progress" style="height: 8px;">
+                                    <div id="risk-indicator" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Chart -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Investment Performance</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" data-period="monthly">Monthly</button>
+                        <button type="button" class="btn btn-outline-secondary" data-period="quarterly">Quarterly</button>
+                        <button type="button" class="btn btn-outline-secondary" data-period="yearly">Yearly</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="250"></canvas>
+                </div>
+            </div>
+            
+            <!-- Investment List -->
+            <div class="card border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Your Investments</h5>
+                </div>
+                <div class="card-body">
+                    {% if investments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Farm</th>
+                                        <th>Project</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Expected ROI</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for investment in investments %}
+                                    <tr>
+                                        <td>{{ investment.farm_name }}</td>
+                                        <td>{{ investment.title }}</td>
+                                        <td>${{ "%.2f"|format(investment.amount_invested) }}</td>
+                                        <td>{{ investment.date_invested.strftime('%b %d, %Y') }}</td>
+                                        <td class="text-success">{{ "%.1f"|format(investment.expected_roi) }}%</td>
+                                        <td>
+                                            <span class="badge {% if investment.status == 'Active' %}bg-success{% elif investment.status == 'Completed' %}bg-info{% else %}bg-secondary{% endif %}">
+                                                {{ investment.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('farm_detail', farm_id=investment.id) }}" class="btn btn-sm btn-outline-success">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-seedling fa-3x text-success"></i>
+                            </div>
+                            <h5>No investments yet</h5>
+                            <p class="text-muted">Start growing your portfolio by exploring our investment opportunities.</p>
+                            <a href="{{ url_for('investment_opportunities') }}" class="btn btn-success">Explore Opportunities</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse the performance data from the server
+        const performanceData = {{ performance_data|safe }};
+        
+        // Initialize investment summary charts
+        initializePortfolioChart();
+        
+        // Initialize performance chart
+        if (performanceData.length > 0) {
+            initializePerformanceChart(performanceData);
+        }
+        
+        // Fetch investment summary data
+        fetchInvestmentSummary();
+        
+        // Calculate risk and returns
+        calculateProjectedReturns();
+    });
+    
+    function initializePortfolioChart() {
+        // This will be populated with actual data from the API
+        const ctx = document.getElementById('portfolioDistributionChart').getContext('2d');
+        window.portfolioChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Loading...'],
+                datasets: [{
+                    data: [100],
+                    backgroundColor: ['#6c757d'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initializePerformanceChart(farmData) {
+        // Get the most recent farm data for the chart
+        const farm = farmData[0]; // Just use the first farm for now
+        
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        window.performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: farm.dates,
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: farm.revenues,
+                        borderColor: '#0dcaf0',
+                        backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: 'Profit',
+                        data: farm.profits,
+                        borderColor: '#38b000',
+                        backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: 'Expenses',
+                        data: farm.expenses,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Amount ($)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Add event listeners for period buttons
+        document.querySelectorAll('[data-period]').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                updateChartPeriod(this.getAttribute('data-period'), farmData);
+            });
+        });
+    }
+    
+    function updateChartPeriod(period, farmData) {
+        const farm = farmData[0];
+        
+        // In a real application, you would fetch different data based on the period
+        // For this demo, we'll just use subsets of the existing data
+        let dates, revenues, profits, expenses;
+        
+        switch(period) {
+            case 'monthly':
+                // Use all data
+                dates = farm.dates;
+                revenues = farm.revenues;
+                profits = farm.profits;
+                expenses = farm.expenses;
+                break;
+            case 'quarterly':
+                // Use every 3rd data point
+                dates = farm.dates.filter((_, i) => i % 3 === 0);
+                revenues = farm.revenues.filter((_, i) => i % 3 === 0);
+                profits = farm.profits.filter((_, i) => i % 3 === 0);
+                expenses = farm.expenses.filter((_, i) => i % 3 === 0);
+                break;
+            case 'yearly':
+                // Use every 12th data point or just the first and last
+                dates = [farm.dates[0], farm.dates[farm.dates.length - 1]];
+                revenues = [farm.revenues[0], farm.revenues[farm.revenues.length - 1]];
+                profits = [farm.profits[0], farm.profits[farm.profits.length - 1]];
+                expenses = [farm.expenses[0], farm.expenses[farm.expenses.length - 1]];
+                break;
+        }
+        
+        // Update chart data
+        window.performanceChart.data.labels = dates;
+        window.performanceChart.data.datasets[0].data = revenues;
+        window.performanceChart.data.datasets[1].data = profits;
+        window.performanceChart.data.datasets[2].data = expenses;
+        window.performanceChart.update();
+    }
+    
+    function fetchInvestmentSummary() {
+        // In a real application, this would fetch data from the server
+        fetch('/api/investment-summary')
+            .then(response => response.json())
+            .then(data => {
+                updatePortfolioChart(data);
+                updatePortfolioDistribution(data);
+            })
+            .catch(error => {
+                console.error('Error fetching investment summary:', error);
+                // For demo, use sample data
+                const sampleData = {
+                    farm_types: ['Crop', 'Livestock', 'Mixed'],
+                    investment_amounts: [5000, 3000, 2000],
+                    total_invested: 10000,
+                    total_roi: 1500
+                };
+                updatePortfolioChart(sampleData);
+                updatePortfolioDistribution(sampleData);
+            });
+    }
+    
+    function updatePortfolioChart(data) {
+        // Update the portfolio distribution chart
+        window.portfolioChart.data.labels = data.farm_types;
+        window.portfolioChart.data.datasets[0].data = data.investment_amounts;
+        
+        // Set appropriate colors
+        const colors = ['#38b000', '#0dcaf0', '#fd7e14', '#6610f2', '#d63384'];
+        window.portfolioChart.data.datasets[0].backgroundColor = data.farm_types.map((_, i) => colors[i % colors.length]);
+        
+        window.portfolioChart.update();
+    }
+    
+    function updatePortfolioDistribution(data) {
+        const portfolioDiv = document.getElementById('portfolioDistribution');
+        portfolioDiv.innerHTML = '';
+        
+        // Set appropriate colors
+        const colors = ['#38b000', '#0dcaf0', '#fd7e14', '#6610f2', '#d63384'];
+        
+        data.farm_types.forEach((type, i) => {
+            const percentage = Math.round((data.investment_amounts[i] / data.total_invested) * 100);
+            
+            const item = document.createElement('div');
+            item.className = 'd-flex justify-content-between align-items-center mb-2';
+            item.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <span class="badge me-2" style="background-color: ${colors[i % colors.length]};">&nbsp;</span>
+                    <span>${type}</span>
+                </div>
+                <span>$${data.investment_amounts[i].toFixed(2)} (${percentage}%)</span>
+            `;
+            
+            portfolioDiv.appendChild(item);
+        });
+    }
+    
+    function calculateProjectedReturns() {
+        // In a real application, this would use actual investment data
+        // For demo, we'll use sample data
+        
+        // Get table data
+        const investments = Array.from(document.querySelectorAll('table tbody tr')).map(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 5) {
+                return {
+                    amount: parseFloat(cells[2].textContent.replace('$', '').trim()),
+                    roi: parseFloat(cells[4].textContent.replace('%', '').trim()) / 100,
+                    status: cells[5].textContent.trim()
+                };
+            }
+            return null;
+        }).filter(inv => inv !== null);
+        
+        if (investments.length > 0) {
+            // Calculate projected returns
+            const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+            const weightedRoi = investments.reduce((sum, inv) => sum + (inv.roi * inv.amount), 0) / totalInvested;
+            const projectedReturns = totalInvested * weightedRoi;
+            
+            // Update UI
+            document.getElementById('projected-returns').textContent = projectedReturns.toFixed(2);
+            document.getElementById('avg-roi').textContent = (weightedRoi * 100).toFixed(1) + '%';
+            
+            // Calculate risk level
+            // For demo, we'll use a simple algorithm based on ROI variance
+            const rois = investments.map(inv => inv.roi);
+            const avgRoi = rois.reduce((sum, roi) => sum + roi, 0) / rois.length;
+            const variance = rois.reduce((sum, roi) => sum + Math.pow(roi - avgRoi, 2), 0) / rois.length;
+            const riskScore = Math.min(variance * 100, 100);
+            
+            let riskLevel = 'Low';
+            let riskColor = 'success';
+            let riskWidth = 33;
+            
+            if (riskScore > 30) {
+                riskLevel = 'Medium';
+                riskColor = 'warning';
+                riskWidth = 66;
+            }
+            
+            if (riskScore > 60) {
+                riskLevel = 'High';
+                riskColor = 'danger';
+                riskWidth = 100;
+            }
+            
+            document.getElementById('overall-risk').textContent = riskLevel;
+            const riskIndicator = document.getElementById('risk-indicator');
+            riskIndicator.style.width = `${riskWidth}%`;
+            riskIndicator.className = `progress-bar bg-${riskColor}`;
+        } else {
+            // Default values for no investments
+            document.getElementById('projected-returns').textContent = '0.00';
+            document.getElementById('avg-roi').textContent = '0.0%';
+            document.getElementById('overall-risk').textContent = 'N/A';
+            document.getElementById('risk-indicator').style.width = '0%';
+        }
+    }
+</script>
+{% endblock %}

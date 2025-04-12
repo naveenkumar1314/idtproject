@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}Invest in {{ opportunity.title }} - Smart Agri Investment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Investment Opportunity Details -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h4 class="mb-0">{{ opportunity.title }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-farm me-1"></i> {{ farm.name }}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-map-marker-alt me-1"></i> {{ farm.location }}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-seedling me-1"></i> {{ farm.farm_type }}
+                            </p>
+                        </div>
+                        <span class="badge bg-{{ 'success' if opportunity.risk_level == 'Low' else 'warning' if opportunity.risk_level == 'Medium' else 'danger' }}">
+                            {{ opportunity.risk_level }} Risk
+                        </span>
+                    </div>
+                    
+                    <div class="my-3">
+                        <p class="mb-1">Funding Progress</p>
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ opportunity.funding_percentage() }}%" aria-valuenow="{{ opportunity.funding_percentage() }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            ${{ "%.2f"|format(opportunity.amount_raised) }} raised of ${{ "%.2f"|format(opportunity.amount_needed) }} 
+                            ({{ "%.1f"|format(opportunity.funding_percentage()) }}%)
+                        </p>
+                    </div>
+
+                    <div class="row g-3 my-4">
+                        <div class="col-md-3 col-6">
+                            <div class="bg-dark-subtle p-3 rounded text-center h-100">
+                                <small class="text-muted d-block mb-1">Expected ROI</small>
+                                <span class="d-block text-success fs-4">{{ "%.1f"|format(opportunity.expected_roi) }}%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="bg-dark-subtle p-3 rounded text-center h-100">
+                                <small class="text-muted d-block mb-1">Duration</small>
+                                <span class="d-block fs-4">{{ opportunity.duration_months }} months</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="bg-dark-subtle p-3 rounded text-center h-100">
+                                <small class="text-muted d-block mb-1">Min. Investment</small>
+                                <span class="d-block fs-4">${{ "%.2f"|format(opportunity.minimum_investment) }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="bg-dark-subtle p-3 rounded text-center h-100">
+                                <small class="text-muted d-block mb-1">Available</small>
+                                <span class="d-block fs-4">${{ "%.2f"|format(remaining) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3">Project Description</h5>
+                    <p>{{ opportunity.description }}</p>
+                    
+                    <h5 class="mt-4 mb-3">Farm Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-map-marker-alt text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6>Location</h6>
+                                    <p class="text-muted mb-0">{{ farm.location }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-ruler-combined text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6>Size</h6>
+                                    <p class="text-muted mb-0">{{ farm.size_hectares }} hectares</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-calendar-alt text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6>Established</h6>
+                                    <p class="text-muted mb-0">{{ farm.established_date.strftime('%B %d, %Y') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-leaf text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6>Farm Type</h6>
+                                    <p class="text-muted mb-0">{{ farm.farm_type }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Chart -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Historical Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="farmPerformanceChart" height="250"></canvas>
+                </div>
+            </div>
+            
+            <!-- ROI Projections -->
+            <div class="card border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Projected Returns</h5>
+                </div>
+                <div class="card-body">
+                    {% if roi_projections %}
+                        <canvas id="roiProjectionChart" height="250"></canvas>
+                        
+                        <div class="alert alert-info mt-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-info-circle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Projection Details</h6>
+                                    <p class="mb-0">These projections are based on historical farm performance and market conditions. Actual returns may vary based on weather conditions, market prices, and other factors.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <p class="mb-0">Insufficient historical data to generate reliable ROI projections for this farm. Please check the farm details page for more information about past performance.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Investment Form -->
+            <div class="card mb-4 border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Make Your Investment</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.is_authenticated %}
+                        <form method="POST" action="{{ url_for('invest', opportunity_id=opportunity.id) }}">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Investment Amount ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" min="{{ opportunity.minimum_investment }}" max="{{ remaining }}" step="10" required>
+                                </div>
+                                <div class="form-text">Minimum investment: ${{ "%.2f"|format(opportunity.minimum_investment) }}</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Expected Return</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="expected_return" readonly>
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <div class="form-text">Based on {{ "%.1f"|format(opportunity.expected_roi) }}% ROI over {{ opportunity.duration_months }} months</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" class="text-success">investment terms</a> and understand the risks involved.
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">Confirm Investment</button>
+                            </div>
+                        </form>
+                        
+                        <div class="alert alert-info mt-4 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shield-alt text-info me-3 fa-lg"></i>
+                                <small>Your investment is protected by our secure platform and backed by real agricultural assets.</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-user-lock fa-3x text-muted"></i>
+                            </div>
+                            <h5>Login Required</h5>
+                            <p class="text-muted">Please login or create an account to invest in this opportunity.</p>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('login') }}?next={{ url_for('invest', opportunity_id=opportunity.id) }}" class="btn btn-outline-light">Login</a>
+                                <a href="{{ url_for('register') }}" class="btn btn-success">Create Account</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Risk Assessment -->
+            <div class="card mb-4 border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Risk Assessment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Overall Risk</span>
+                            <span class="badge bg-{{ 'success' if opportunity.risk_level == 'Low' else 'warning' if opportunity.risk_level == 'Medium' else 'danger' }}">
+                                {{ opportunity.risk_level }}
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-{{ 'success' if opportunity.risk_level == 'Low' else 'warning' if opportunity.risk_level == 'Medium' else 'danger' }}" 
+                                 role="progressbar" 
+                                 style="width: {{ '33%' if opportunity.risk_level == 'Low' else '66%' if opportunity.risk_level == 'Medium' else '100%' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Market Volatility</span>
+                            <span class="badge bg-success">Low</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Weather Risks</span>
+                            <span class="badge bg-warning">Medium</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 55%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>Operational Risks</span>
+                            <span class="badge bg-success">Low</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Risk Mitigation</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Diversified crop/livestock portfolio
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Advanced irrigation systems
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Insurance coverage for natural disasters
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Experienced management team
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse the performance data from the server
+        const performanceData = {{ performance_data|safe }};
+        
+        // Initialize farm performance chart
+        initializeFarmPerformanceChart(performanceData);
+        
+        // Initialize ROI projection chart if data exists
+        {% if roi_projections %}
+        initializeROIProjectionChart({{ roi_projections|tojson }});
+        {% endif %}
+        
+        // Calculate expected return when amount changes
+        const amountInput = document.getElementById('amount');
+        const expectedReturnInput = document.getElementById('expected_return');
+        
+        if (amountInput && expectedReturnInput) {
+            amountInput.addEventListener('input', function() {
+                calculateExpectedReturn();
+            });
+            
+            // Initial calculation
+            calculateExpectedReturn();
+        }
+    });
+    
+    function initializeFarmPerformanceChart(data) {
+        const ctx = document.getElementById('farmPerformanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [
+                    {
+                        label: 'Profit',
+                        data: data.profits,
+                        borderColor: '#38b000',
+                        backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Amount ($)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initializeROIProjectionChart(projections) {
+        const months = projections.map(item => 'Month ' + item.month);
+        const projectedROI = projections.map(item => item.projected_roi);
+        
+        const ctx = document.getElementById('roiProjectionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Projected ROI (%)',
+                        data: projectedROI,
+                        borderColor: '#38b000',
+                        backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toFixed(2) + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'ROI (%)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function calculateExpectedReturn() {
+        const amountInput = document.getElementById('amount');
+        const expectedReturnInput = document.getElementById('expected_return');
+        
+        if (amountInput.value) {
+            const amount = parseFloat(amountInput.value);
+            const roi = {{ opportunity.expected_roi }} / 100;
+            const duration = {{ opportunity.duration_months }};
+            
+            // Simple ROI calculation (in reality would be more complex with compounding, etc.)
+            const expectedReturn = amount * roi;
+            
+            expectedReturnInput.value = expectedReturn.toFixed(2);
+        } else {
+            expectedReturnInput.value = '';
+        }
+    }
+</script>
+{% endblock %}

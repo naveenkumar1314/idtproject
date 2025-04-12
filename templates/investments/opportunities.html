@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Opportunities - Smart Agri Investment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Investment Opportunities</h1>
+    
+    <!-- Filters Section -->
+    <div class="card mb-4 border-0">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('investment_opportunities') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="farm_type" class="form-label">Farm Type</label>
+                        <select class="form-select" id="farm_type" name="farm_type">
+                            <option value="">All Types</option>
+                            {% for farm_type in farm_types %}
+                            <option value="{{ farm_type }}" {% if request.args.get('farm_type') == farm_type %}selected{% endif %}>{{ farm_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="risk_level" class="form-label">Risk Level</label>
+                        <select class="form-select" id="risk_level" name="risk_level">
+                            <option value="">All Levels</option>
+                            {% for risk_level in risk_levels %}
+                            <option value="{{ risk_level }}" {% if request.args.get('risk_level') == risk_level %}selected{% endif %}>{{ risk_level }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="min_roi" class="form-label">Min. ROI (%)</label>
+                        <input type="number" class="form-control" id="min_roi" name="min_roi" min="0" step="0.1" value="{{ request.args.get('min_roi', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="max_investment" class="form-label">Max. Investment ($)</label>
+                        <input type="number" class="form-control" id="max_investment" name="max_investment" min="0" step="100" value="{{ request.args.get('max_investment', '') }}">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="submit" class="btn btn-success">Apply Filters</button>
+                    <a href="{{ url_for('investment_opportunities') }}" class="btn btn-outline-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Opportunities Grid -->
+    <div class="row g-4">
+        {% if opportunities %}
+            {% for opportunity in opportunities %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-{{ 'success' if opportunity.risk_level == 'Low' else 'warning' if opportunity.risk_level == 'Medium' else 'danger' }}">
+                                {{ opportunity.risk_level }} Risk
+                            </span>
+                            <span class="badge bg-dark">{{ opportunity.farm.farm_type }}</span>
+                        </div>
+                        
+                        <h5 class="card-title">{{ opportunity.title }}</h5>
+                        <p class="text-muted small mb-3">{{ opportunity.farm.name }} | {{ opportunity.farm.location }}</p>
+                        
+                        <p class="card-text">{{ opportunity.description[:100] }}{% if opportunity.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="my-3">
+                            <p class="mb-1 small">Funding: {{ "%.1f"|format(opportunity.funding_percentage()) }}%</p>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ opportunity.funding_percentage() }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="bg-dark p-2 rounded">
+                                    <small class="text-muted d-block">Total Needed</small>
+                                    <span>${{ "%.2f"|format(opportunity.amount_needed) }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark p-2 rounded">
+                                    <small class="text-muted d-block">Expected ROI</small>
+                                    <span class="text-success">{{ "%.1f"|format(opportunity.expected_roi) }}%</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark p-2 rounded">
+                                    <small class="text-muted d-block">Min. Investment</small>
+                                    <span>${{ "%.2f"|format(opportunity.minimum_investment) }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark p-2 rounded">
+                                    <small class="text-muted d-block">Duration</small>
+                                    <span>{{ opportunity.duration_months }} months</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url_for('invest', opportunity_id=opportunity.id) }}" class="btn btn-success">Invest Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <p class="mb-0">No investment opportunities match your search criteria. Please try different filters or check back later.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if opportunities and opportunities|length > 12 %}
+    <nav class="mt-5" aria-label="Investment opportunities pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+    
+    <!-- ROI Comparison Section -->
+    <div class="card mt-5 border-0">
+        <div class="card-header bg-dark">
+            <h4 class="mb-0">Agricultural Investment ROI Comparison</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <canvas id="roiComparisonChart" height="250"></canvas>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="mb-3">Why Invest in Agriculture?</h5>
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6>Consistent Returns</h6>
+                            <p class="text-muted small">Agricultural investments have historically provided stable returns even during market downturns.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-seedling fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6>Real Asset Backing</h6>
+                            <p class="text-muted small">Investments are backed by tangible agricultural assets with intrinsic value.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-globe-americas fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6>Sustainability Impact</h6>
+                            <p class="text-muted small">Support sustainable farming practices while earning competitive returns.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize ROI comparison chart
+        const ctx = document.getElementById('roiComparisonChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Crop Farming', 'Livestock', 'Mixed Farming', 'Stock Market', 'Real Estate', 'Bonds'],
+                datasets: [{
+                    label: 'Average Annual ROI (%)',
+                    data: [15.2, 12.8, 14.5, 10.5, 8.7, 5.3],
+                    backgroundColor: [
+                        '#38b000', '#38b000', '#38b000',
+                        '#6c757d', '#6c757d', '#6c757d'
+                    ],
+                    borderColor: [
+                        '#38b000', '#38b000', '#38b000',
+                        '#6c757d', '#6c757d', '#6c757d'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Return on Investment (%)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

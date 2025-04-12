@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Agri Investment{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <svg class="me-2" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 6.5C12 5.4 11.6 4.4 10.9 3.7C10.2 3 9.2 2.6 8.1 2.6C5.7 2.6 3.8 4.5 3.8 6.9C3.8 7.9 4.2 9 4.9 9.7L12 16.8L19.1 9.7C19.8 9 20.2 7.9 20.2 6.9C20.2 4.5 18.3 2.6 15.9 2.6C14.8 2.6 13.8 3 13.1 3.7C12.4 4.4 12 5.4 12 6.5Z" fill="#38b000"/>
+                    <path d="M22 21H2V19H22V21Z" fill="#38b000"/>
+                    <path d="M12 11.2C11.6 11.2 11.2 11 11 10.8L4.8 4.6C4.4 4.2 4 3.6 4 3C4 1.4 5.4 0 7 0C7.8 0 8.6 0.4 9 1L12 4L15 1C15.6 0.4 16.2 0 17 0C18.6 0 20 1.4 20 3C20 3.6 19.6 4.2 19.2 4.6L13 10.8C12.8 11 12.4 11.2 12 11.2Z" fill="#38b000"/>
+                    <path d="M5.5 21.5H1.5V14.5H5.5V21.5Z" fill="#38b000"/>
+                    <path d="M22.5 21.5H18.5V14.5H22.5V21.5Z" fill="#38b000"/>
+                    <path d="M14 21.5H10V12.5H14V21.5Z" fill="#38b000"/>
+                </svg>
+                <span>Smart Agri Investment</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('investment_opportunities') }}">Opportunities</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('farms') }}">Farms</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('investor_dashboard') }}">Dashboard</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('investor_dashboard') }}">Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light me-2">Login</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-success">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="flex-shrink-0">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-4 bg-dark">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Smart Agri Investment</h5>
+                    <p class="text-muted">Connecting investors with profitable farming ventures through data-driven insights.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}" class="text-decoration-none">Home</a></li>
+                        <li><a href="{{ url_for('investment_opportunities') }}" class="text-decoration-none">Investment Opportunities</a></li>
+                        <li><a href="{{ url_for('farms') }}" class="text-decoration-none">Farms</a></li>
+                        {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('investor_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                        {% else %}
+                        <li><a href="{{ url_for('login') }}" class="text-decoration-none">Login</a></li>
+                        <li><a href="{{ url_for('register') }}" class="text-decoration-none">Register</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope me-2"></i> info@smartagriinvest.com</li>
+                        <li><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> 123 Farm Street, Agri City</li>
+                    </ul>
+                    <div class="social-icons mt-2">
+                        <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="me-2"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="me-2"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0">&copy; 2023 Smart Agri Investment. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Common JS -->
+    <script src="{{ url_for('static', filename='js/chart-config.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
