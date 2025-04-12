@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics & Charts - Smart Agri Investment{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">Analytics & Charts</h1>
+            
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form id="analyticsFiltersForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="farmSelect" class="form-label">Farm</label>
+                                        <select class="form-select" id="farmSelect" name="farm_id">
+                                            <option value="">Select Farm</option>
+                                            {% for farm in farms %}
+                                            <option value="{{ farm.id }}">{{ farm.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="opportunitySelect" class="form-label">Investment Project</label>
+                                        <select class="form-select" id="opportunitySelect" name="opportunity_id" disabled>
+                                            <option value="">Select Project</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="chartPeriod" class="form-label">Time Period</label>
+                                        <select class="form-select" id="chartPeriod" name="period">
+                                            <option value="monthly">Monthly</option>
+                                            <option value="quarterly">Quarterly</option>
+                                            <option value="yearly">Yearly</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="includeForecast" class="form-label">Forecast</label>
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" id="includeForecast" checked>
+                                            <label class="form-check-label" for="includeForecast">Include Future Projections</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-end h-100">
+                                <div class="bg-dark-subtle rounded-3 p-3">
+                                    <div class="small text-muted mb-1">Last Data Update</div>
+                                    <div class="fs-5" id="lastUpdated">--</div>
+                                </div>
+                                <div class="d-flex mb-3">
+                                    <button type="button" class="btn btn-success" id="refreshDataBtn">
+                                        <i class="fas fa-sync-alt me-2"></i> Refresh Data
+                                    </button>
+                                    <div class="dropdown ms-2">
+                                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="chartViewOptions" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-chart-bar me-2"></i> Chart Options
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chartViewOptions">
+                                            <li><button class="dropdown-item chart-type-btn" data-type="line">Line Chart</button></li>
+                                            <li><button class="dropdown-item chart-type-btn" data-type="bar">Bar Chart</button></li>
+                                            <li><button class="dropdown-item chart-type-btn" data-type="radar">Radar Chart</button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item" id="downloadChartBtn">Download Chart</button></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- ROI Trends Chart -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2 text-success"></i> ROI Trends
+                    </h5>
+                    <div class="chart-controls">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="roiInfoBtn" data-bs-toggle="tooltip" title="Return on Investment over time">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="roiTrendsChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center d-none" id="roiTrendsNoData">
+                        <p class="text-muted mb-0">Select a farm and investment project to view ROI trends.</p>
+                    </div>
+                    <div class="row mt-3 text-center d-none" id="roiTrendsSummary">
+                        <div class="col-4">
+                            <div class="small text-muted">Target ROI</div>
+                            <div class="fs-5 fw-bold" id="targetRoi">--%</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Current ROI</div>
+                            <div class="fs-5 fw-bold text-success" id="currentRoi">--%</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">ROI Trend</div>
+                            <div class="fs-5 fw-bold" id="roiTrend">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Weather vs. Yield Chart -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cloud-sun-rain me-2 text-info"></i> Weather vs. Yield
+                    </h5>
+                    <div class="chart-controls">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="weatherInfoBtn" data-bs-toggle="tooltip" title="Weather impact on crop yields">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="weatherYieldChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center d-none" id="weatherYieldNoData">
+                        <p class="text-muted mb-0">Select a farm to view weather impact on crop yields.</p>
+                    </div>
+                    <div class="row mt-3 d-none" id="weatherYieldSummary">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-center" id="weatherLegend">
+                                <!-- Weather condition indicators will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Market Price Prediction Chart -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-dollar-sign me-2 text-warning"></i> Market Price Prediction
+                    </h5>
+                    <div class="chart-controls">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="priceInfoBtn" data-bs-toggle="tooltip" title="Future market price projections">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="marketPriceChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center d-none" id="marketPriceNoData">
+                        <p class="text-muted mb-0">Select a farm to view market price predictions.</p>
+                    </div>
+                    <div class="row mt-3 d-none" id="marketPriceSummary">
+                        <div class="col-4">
+                            <div class="small text-muted">Current Price</div>
+                            <div class="fs-5 fw-bold" id="currentPrice">$--</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">6-Month Forecast</div>
+                            <div class="fs-5 fw-bold text-warning" id="forecastPrice">$--</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Price Trend</div>
+                            <div class="fs-5 fw-bold" id="priceTrend">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Risk Levels Chart -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt me-2 text-danger"></i> Risk Level Analysis
+                    </h5>
+                    <div class="chart-controls">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="riskInfoBtn" data-bs-toggle="tooltip" title="Risk level changes over time">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="riskLevelsChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center d-none" id="riskLevelsNoData">
+                        <p class="text-muted mb-0">Select a farm and investment project to view risk analysis.</p>
+                    </div>
+                    <div class="row mt-3 d-none" id="riskLevelsSummary">
+                        <div class="col-4">
+                            <div class="small text-muted">Initial Risk</div>
+                            <div class="fs-5 fw-bold" id="initialRisk">--</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Current Risk</div>
+                            <div class="fs-5 fw-bold" id="currentRisk">--</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Risk Trend</div>
+                            <div class="fs-5 fw-bold" id="riskTrend">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analysis Insights -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i> Analytics Insights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="insightsContainer">
+                        <div class="col-12 text-center" id="noInsights">
+                            <p class="mb-0 text-muted">Select a farm and investment project to view analytical insights.</p>
+                        </div>
+                        <!-- Insights will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Modals -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infoModalLabel">Chart Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="infoModalContent">
+                <!-- Content populated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the analytics dashboard
+        initAnalyticsDashboard();
+    });
+</script>
+{% endblock %}

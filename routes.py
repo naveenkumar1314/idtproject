@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import login_user, logout_user, current_user, login_required
 from datetime import datetime, date
 import json
+import math
 import numpy as np
 import pandas as pd
 from app import app, db
@@ -347,6 +348,279 @@ def api_investment_summary():
         'investment_amounts': investment_amounts,
         'total_invested': sum(investment_amounts),
         'total_roi': total_roi
+    }
+    
+    return jsonify(data)
+
+
+# New API Routes for Dynamic Charts & Analytics
+
+@app.route('/api/roi-trends/<int:opportunity_id>')
+@login_required
+def api_roi_trends(opportunity_id):
+    """API endpoint for ROI trends over time"""
+    opportunity = InvestmentOpportunity.query.get_or_404(opportunity_id)
+    farm = opportunity.farm
+    
+    # Get farm performance data
+    performances = FarmPerformance.query.filter_by(farm_id=farm.id).order_by(FarmPerformance.date).all()
+    
+    # Calculate ROI for each period based on profits and investment amount
+    dates = [performance.date.strftime('%Y-%m-%d') for performance in performances]
+    
+    # Calculate monthly ROI values based on profit margins
+    roi_values = []
+    cumulative_roi = 0
+    target_roi = opportunity.expected_roi
+    
+    for performance in performances:
+        # For demo purposes, we'll simulate ROI growth trend
+        if performance.revenue > 0:
+            period_roi = (performance.profit / performance.revenue) * 100
+            # Adjust based on target ROI
+            adjusted_roi = period_roi * (target_roi / 15)  # Scaling factor
+            roi_values.append(round(adjusted_roi, 2))
+            cumulative_roi += adjusted_roi
+        else:
+            roi_values.append(0)
+    
+    # Project future ROI if needed to extend the chart
+    if len(dates) < 12:
+        # Calculate simple trend for projection
+        avg_period_roi = target_roi / 12
+        for i in range(len(dates), 12):
+            projected_date = datetime.strptime(dates[-1], '%Y-%m-%d')
+            projected_date = projected_date.replace(month=projected_date.month + (i - len(dates) + 1))
+            dates.append(projected_date.strftime('%Y-%m-%d'))
+            roi_values.append(round(roi_values[-1] * 1.05, 2))  # 5% growth each period
+    
+    data = {
+        'opportunity_name': opportunity.title,
+        'farm_name': farm.name,
+        'target_roi': target_roi,
+        'dates': dates,
+        'roi_values': roi_values,
+        'cumulative_roi': round(cumulative_roi, 2)
+    }
+    
+    return jsonify(data)
+
+
+@app.route('/api/weather-yield/<int:farm_id>')
+def api_weather_yield(farm_id):
+    """API endpoint for weather vs. yield prediction data"""
+    farm = Farm.query.get_or_404(farm_id)
+    performances = FarmPerformance.query.filter_by(farm_id=farm_id).order_by(FarmPerformance.date).all()
+    
+    # Extract dates, yields and weather data
+    dates = [performance.date.strftime('%Y-%m-%d') for performance in performances]
+    yields_actual = [performance.yield_amount for performance in performances]
+    weather_conditions = [performance.weather_conditions for performance in performances]
+    
+    # Generate predicted yields based on weather correlation
+    # For demo purposes, we'll create a simple weather-to-yield relationship
+    yields_predicted = []
+    
+    # Weather impact scores (simplified)
+    weather_impact = {
+        'Sunny': 1.1,
+        'Cloudy': 0.9,
+        'Rainy': 0.8,
+        'Storm': 0.6,
+        'Drought': 0.5,
+        'Ideal': 1.2,
+        'Cold': 0.7,
+        'Hot': 0.85
+    }
+    
+    # Calculate predicted yields based on weather
+    base_yield = sum(yields_actual) / len(yields_actual) if yields_actual else 0
+    for condition in weather_conditions:
+        # Default impact if weather condition not in dictionary
+        impact = weather_impact.get(condition, 1.0)
+        predicted = base_yield * impact
+        yields_predicted.append(round(predicted, 2))
+    
+    # Project future yields based on seasonal patterns
+    # This would use more sophisticated models in a real application
+    future_dates = []
+    future_predictions = []
+    
+    # For demo purposes, project 3 months ahead
+    if dates:
+        last_date = datetime.strptime(dates[-1], '%Y-%m-%d')
+        for i in range(1, 4):
+            future_date = last_date.replace(month=last_date.month + i)
+            future_dates.append(future_date.strftime('%Y-%m-%d'))
+            
+            # Simple yield prediction based on seasonality
+            month_factor = 1 + (0.1 * ((future_date.month % 12) / 12))
+            future_yield = base_yield * month_factor
+            future_predictions.append(round(future_yield, 2))
+    
+    data = {
+        'farm_name': farm.name,
+        'dates': dates,
+        'future_dates': future_dates,
+        'yields_actual': yields_actual,
+        'yields_predicted': yields_predicted,
+        'future_predictions': future_predictions,
+        'weather_conditions': weather_conditions
+    }
+    
+    return jsonify(data)
+
+
+@app.route('/api/market-price-prediction/<int:farm_id>')
+def api_market_price_prediction(farm_id):
+    """API endpoint for market price prediction data"""
+    farm = Farm.query.get_or_404(farm_id)
+    performances = FarmPerformance.query.filter_by(farm_id=farm_id).order_by(FarmPerformance.date).all()
+    
+    # Extract dates and revenue data
+    dates = [performance.date.strftime('%Y-%m-%d') for performance in performances]
+    revenues = [performance.revenue for performance in performances]
+    yields_actual = [performance.yield_amount for performance in performances]
+    
+    # Calculate historical price per unit
+    prices = []
+    for i in range(len(revenues)):
+        if yields_actual[i] > 0:
+            price = revenues[i] / yields_actual[i]
+            prices.append(round(price, 2))
+        else:
+            # If yield is zero, use previous price or a default
+            previous_price = prices[-1] if prices else 10.0
+            prices.append(previous_price)
+    
+    # For prediction, we'll use a simple time series forecast
+    # In a real app, this would use a more sophisticated model
+    future_dates = []
+    future_prices = []
+    
+    if prices:
+        # Calculate trend
+        if len(prices) >= 2:
+            avg_change = sum([(prices[i] - prices[i-1]) for i in range(1, len(prices))]) / (len(prices) - 1)
+        else:
+            avg_change = 0
+            
+        # Add seasonality factor
+        last_date = datetime.strptime(dates[-1], '%Y-%m-%d') if dates else datetime.now()
+        last_price = prices[-1] if prices else 10.0
+        
+        # Project 6 months ahead
+        for i in range(1, 7):
+            projected_date = last_date.replace(month=((last_date.month - 1 + i) % 12) + 1)
+            if projected_date.month == 1:
+                projected_date = projected_date.replace(year=projected_date.year + 1)
+                
+            future_dates.append(projected_date.strftime('%Y-%m-%d'))
+            
+            # Seasonal factor (highest in summer, lowest in winter)
+            month = projected_date.month
+            seasonal_factor = 1 + 0.1 * math.sin(math.pi * (month - 3) / 6)
+            
+            # Project price with trend and seasonality
+            projected_price = last_price + (avg_change * i * seasonal_factor)
+            future_prices.append(round(max(projected_price, 0.1), 2))  # Ensure no negative prices
+    
+    data = {
+        'farm_name': farm.name,
+        'farm_type': farm.farm_type,
+        'dates': dates,
+        'historical_prices': prices,
+        'future_dates': future_dates,
+        'predicted_prices': future_prices
+    }
+    
+    return jsonify(data)
+
+
+@app.route('/api/risk-levels/<int:opportunity_id>')
+@login_required
+def api_risk_levels(opportunity_id):
+    """API endpoint for investment risk levels over time"""
+    opportunity = InvestmentOpportunity.query.get_or_404(opportunity_id)
+    farm = opportunity.farm
+    
+    # Get farm performance data
+    performances = FarmPerformance.query.filter_by(farm_id=farm.id).order_by(FarmPerformance.date).all()
+    
+    # Extract dates
+    dates = [performance.date.strftime('%Y-%m-%d') for performance in performances]
+    
+    # Calculate risk factors based on multiple indicators
+    volatility_risks = []
+    weather_risks = []
+    financial_risks = []
+    overall_risks = []
+    
+    # Weather risk mapping
+    weather_risk = {
+        'Sunny': 10,
+        'Cloudy': 25,
+        'Rainy': 40,
+        'Storm': 75,
+        'Drought': 90,
+        'Ideal': 5,
+        'Cold': 50,
+        'Hot': 60
+    }
+    
+    # Calculate initial base risk from opportunity
+    if opportunity.risk_level == "Low":
+        base_risk = 20
+    elif opportunity.risk_level == "Medium":
+        base_risk = 50
+    else:  # High
+        base_risk = 75
+    
+    for i, performance in enumerate(performances):
+        # Volatility risk based on profit variability
+        if i > 0 and performances[i-1].profit > 0:
+            profit_change = abs((performance.profit - performances[i-1].profit) / performances[i-1].profit)
+            vol_risk = min(int(profit_change * 100), 100)
+        else:
+            vol_risk = base_risk
+        volatility_risks.append(vol_risk)
+        
+        # Weather risk based on conditions
+        w_risk = weather_risk.get(performance.weather_conditions, 30)
+        weather_risks.append(w_risk)
+        
+        # Financial risk based on profit margin
+        if performance.revenue > 0:
+            profit_margin = performance.profit / performance.revenue
+            fin_risk = max(min(int((1 - profit_margin) * 100), 100), 0)
+        else:
+            fin_risk = base_risk
+        financial_risks.append(fin_risk)
+        
+        # Calculate weighted overall risk
+        overall_risk = int(0.3 * vol_risk + 0.3 * w_risk + 0.4 * fin_risk)
+        overall_risks.append(overall_risk)
+    
+    # Risk category mapping
+    risk_categories = []
+    for risk in overall_risks:
+        if risk < 30:
+            risk_categories.append("Low")
+        elif risk < 60:
+            risk_categories.append("Medium")
+        else:
+            risk_categories.append("High")
+    
+    data = {
+        'opportunity_name': opportunity.title,
+        'farm_name': farm.name,
+        'dates': dates,
+        'volatility_risks': volatility_risks,
+        'weather_risks': weather_risks,
+        'financial_risks': financial_risks,
+        'overall_risks': overall_risks,
+        'risk_categories': risk_categories,
+        'base_risk_level': opportunity.risk_level
     }
     
     return jsonify(data)
