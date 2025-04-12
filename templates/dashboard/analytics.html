@@ -267,6 +267,11 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Hidden data for farm opportunities -->
+<div id="farmOpportunitiesData" style="display: none;">
+    {{ farm_opportunities|safe }}
+</div>
+
 <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

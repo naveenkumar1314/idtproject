@@ -240,43 +240,21 @@ function getChartOptions(yAxisLabel) {
  * Fetch available investment opportunities for a farm
  */
 function fetchFarmOpportunities(farmId) {
-    // In a real application, this would fetch from the server
-    fetch(`/farm/${farmId}`)
-        .then(response => {
-            if (response.ok) {
-                // Parse the HTML to extract opportunities
-                return response.text();
-            }
-            throw new Error('Farm not found');
-        })
-        .then(html => {
-            // Create a temporary element to parse the HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            
-            // Find the opportunities section
-            const opportunities = [];
-            const opportunityElements = tempDiv.querySelectorAll('.opportunity-card');
-            
-            opportunityElements.forEach(element => {
-                const id = element.getAttribute('data-opportunity-id');
-                const title = element.querySelector('.opportunity-title').textContent;
-                
-                if (id && title) {
-                    opportunities.push({ id, title });
-                }
-            });
-            
-            // Update the opportunity select
-            updateOpportunitySelect(opportunities);
-        })
-        .catch(error => {
-            console.error('Error fetching farm opportunities:', error);
-            // Reset opportunity select
-            const opportunitySelect = document.getElementById('opportunitySelect');
-            opportunitySelect.innerHTML = '<option value="">Select Project</option>';
-            opportunitySelect.disabled = true;
-        });
+    // Get the opportunities for this farm from the data we already have
+    const farmOpportunitiesStr = document.getElementById('farmOpportunitiesData').textContent;
+    try {
+        const farmOpportunities = JSON.parse(farmOpportunitiesStr);
+        const opportunities = farmOpportunities[farmId] || [];
+        
+        // Update the opportunity select
+        updateOpportunitySelect(opportunities);
+    } catch (error) {
+        console.error('Error parsing farm opportunities:', error);
+        // Reset opportunity select
+        const opportunitySelect = document.getElementById('opportunitySelect');
+        opportunitySelect.innerHTML = '<option value="">Select Project</option>';
+        opportunitySelect.disabled = true;
+    }
 }
 
 /**
