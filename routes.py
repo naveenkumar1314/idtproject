@@ -146,6 +146,30 @@ def investor_dashboard():
                           total_invested=total_invested,
                           performance_data=json.dumps(performance_data))
 
+@app.route('/analytics')
+@login_required
+def analytics_dashboard():
+    """Analytics dashboard route with dynamic charts"""
+    # Get all farms for the filter dropdown
+    farms = Farm.query.all()
+    
+    # Get all investment opportunities
+    opportunities = InvestmentOpportunity.query.all()
+    
+    # Group opportunities by farm for easy filtering
+    farm_opportunities = {}
+    for opportunity in opportunities:
+        if opportunity.farm_id not in farm_opportunities:
+            farm_opportunities[opportunity.farm_id] = []
+        farm_opportunities[opportunity.farm_id].append({
+            'id': opportunity.id,
+            'title': opportunity.title
+        })
+    
+    return render_template('dashboard/analytics.html',
+                          farms=farms,
+                          farm_opportunities=json.dumps(farm_opportunities))
+
 
 @app.route('/farms')
 def farms():
