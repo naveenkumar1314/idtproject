@@ -159,9 +159,9 @@ def analytics_dashboard():
     # Group opportunities by farm for easy filtering
     farm_opportunities = {}
     for opportunity in opportunities:
-        if opportunity.farm_id not in farm_opportunities:
-            farm_opportunities[opportunity.farm_id] = []
-        farm_opportunities[opportunity.farm_id].append({
+        if str(opportunity.farm_id) not in farm_opportunities:
+            farm_opportunities[str(opportunity.farm_id)] = []
+        farm_opportunities[str(opportunity.farm_id)].append({
             'id': opportunity.id,
             'title': opportunity.title
         })
