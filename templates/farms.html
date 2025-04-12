@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Farms - Smart Agri Investment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Farms</h1>
+    
+    <!-- Farm Filtering -->
+    <div class="card mb-4 border-0">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('farms') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="farm_type" class="form-label">Farm Type</label>
+                        <select class="form-select" id="farm_type" name="farm_type">
+                            <option value="">All Types</option>
+                            <option value="Crop">Crop</option>
+                            <option value="Livestock">Livestock</option>
+                            <option value="Mixed">Mixed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="risk_level" class="form-label">Risk Level</label>
+                        <select class="form-select" id="risk_level" name="risk_level">
+                            <option value="">All Levels</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="min_roi" class="form-label">Min. ROI (%)</label>
+                        <input type="number" class="form-control" id="min_roi" name="min_roi" min="0" step="0.1">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="submit" class="btn btn-success">Apply Filters</button>
+                    <a href="{{ url_for('farms') }}" class="btn btn-outline-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Farms Grid -->
+    <div class="row g-4">
+        {% if farms %}
+            {% for farm in farms %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm card-hover">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                {% if farm.farm_type == 'Crop' %}
+                                <i class="fas fa-seedling fa-2x text-success"></i>
+                                {% elif farm.farm_type == 'Livestock' %}
+                                <i class="fas fa-horse fa-2x text-success"></i>
+                                {% else %}
+                                <i class="fas fa-tractor fa-2x text-success"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">{{ farm.name }}</h5>
+                                <small class="text-muted">{{ farm.location }}</small>
+                            </div>
+                        </div>
+                        
+                        <p class="card-text">{{ farm.description[:100] }}{% if farm.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="my-3">
+                            <p class="mb-1 small">Funding: {{ "%.1f"|format(farm.funding_percentage()) }}%</p>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ farm.funding_percentage() }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Farm Type</small>
+                                    <span>{{ farm.farm_type }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Size</small>
+                                    <span>{{ farm.size_hectares }} hectares</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Expected ROI</small>
+                                    <span class="text-success">{{ farm.expected_roi }}%</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark-subtle p-2 rounded">
+                                    <small class="text-muted d-block">Risk Level</small>
+                                    <span class="{{ 'text-success' if farm.risk_level == 'Low' else 'text-warning' if farm.risk_level == 'Medium' else 'text-danger' }}">{{ farm.risk_level }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url_for('farm_detail', farm_id=farm.id) }}" class="btn btn-outline-success">View Farm Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <p class="mb-0">No farms match your search criteria. Please try different filters or check back later.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if farms and farms|length > 12 %}
+    <nav class="mt-5" aria-label="Farm pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+    
+    <!-- Farm Types Information -->
+    <div class="row mt-5 g-4">
+        <div class="col-lg-4">
+            <div class="card h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="fas fa-seedling fa-2x text-success"></i>
+                        </div>
+                        <h5 class="mb-0">Crop Farming</h5>
+                    </div>
+                    <p>Crop farms focus on growing a variety of plants for food, fiber, and other products. These farms benefit from seasonal harvests and crop rotation strategies.</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Diverse crop yields</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Seasonal revenue cycles</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Sustainable farming practices</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="fas fa-horse fa-2x text-success"></i>
+                        </div>
+                        <h5 class="mb-0">Livestock Farming</h5>
+                    </div>
+                    <p>Livestock farms raise animals for meat, dairy, eggs, and other animal products. These operations provide steady revenue streams from animal products throughout the year.</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Consistent revenue streams</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Multiple product channels</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Year-round production</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="fas fa-tractor fa-2x text-success"></i>
+                        </div>
+                        <h5 class="mb-0">Mixed Farming</h5>
+                    </div>
+                    <p>Mixed farms combine crop and livestock operations for a diversified approach. These farms benefit from natural synergies between crops and animals, creating resilient business models.</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Risk diversification</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Complementary operations</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Enhanced sustainability</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Investment Benefits Section -->
+    <div class="card mt-5 border-0">
+        <div class="card-header bg-dark">
+            <h4 class="mb-0">Why Invest in Agricultural Farms?</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex mb-4">
+                        <div class="me-3">
+                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Stable Returns</h5>
+                            <p class="mb-0">Agricultural investments tend to be less volatile than traditional market investments, providing stable returns even during economic downturns.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-4">
+                        <div class="me-3">
+                            <i class="fas fa-seedling fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Tangible Assets</h5>
+                            <p class="mb-0">Investments are backed by real, productive land and assets that increase in value over time and produce essential food and materials.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex mb-4">
+                        <div class="me-3">
+                            <i class="fas fa-globe-americas fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Sustainability Impact</h5>
+                            <p class="mb-0">Support sustainable farming practices that prioritize environmental stewardship while still generating competitive financial returns.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-lightbulb fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5>Innovation Opportunity</h5>
+                            <p class="mb-0">Agricultural technology is rapidly evolving, creating opportunities for increased efficiency, productivity, and profitability in farm operations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - Smart Agri Investment{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="mb-4">
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8v4m0 4h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#6c757d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1 class="display-4 mb-3">404</h1>
+            <h2 class="mb-4">Page Not Found</h2>
+            <p class="lead mb-5">Oops! The page you're looking for doesn't exist or may have been moved.</p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('index') }}" class="btn btn-success">
+                    <i class="fas fa-home me-2"></i> Go to Homepage
+                </a>
+                <a href="{{ url_for('investment_opportunities') }}" class="btn btn-outline-light">
+                    <i class="fas fa-search me-2"></i> Explore Opportunities
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <div class="card border-0">
+                <div class="card-body">
+                    <h5 class="mb-3 text-center">Popular Pages</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="{{ url_for('index') }}" class="card text-center border-0 bg-dark-subtle text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-home fa-2x mb-2 text-success"></i>
+                                    <h6>Home</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('investment_opportunities') }}" class="card text-center border-0 bg-dark-subtle text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-hand-holding-usd fa-2x mb-2 text-success"></i>
+                                    <h6>Investments</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('farms') }}" class="card text-center border-0 bg-dark-subtle text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-tractor fa-2x mb-2 text-success"></i>
+                                    <h6>Farms</h6>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
