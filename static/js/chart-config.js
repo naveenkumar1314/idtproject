@@ -24,7 +24,7 @@ Chart.defaults.font.size = 12;
 
 // Money formatter for chart tooltips and labels
 function formatMoney(value) {
-    return '$' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    return '₹' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 }
 
 // Percentage formatter
