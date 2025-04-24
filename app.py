@@ -21,8 +21,12 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "agri-investment-default-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
-# configure the database, relative to the app instance folder
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///agri_investment.db")
+# Configure the database
+# Use SQLite as the default database for now
+database_url = "sqlite:///agri_investment.db"
+app.logger.info(f"Using database: {database_url}")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
