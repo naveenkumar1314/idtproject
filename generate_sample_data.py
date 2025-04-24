@@ -65,66 +65,66 @@ def generate_sample_data():
         
         farm_data = [
             {
-                "name": "Green Valley Crops",
-                "location": "California, USA",
-                "description": "Sustainable crop farm specializing in organic vegetables and fruits.",
+                "name": "Green Valley Organic Farms",
+                "location": "Coimbatore, Tamil Nadu",
+                "description": "Sustainable crop farm specializing in organic vegetables and traditional rice varieties.",
                 "farm_type": "Crop",
                 "size_hectares": 120.5,
                 "established_date": datetime(2018, 5, 15).date(),
-                "total_funding_needed": 500000.0,
-                "current_funding": 320000.0,
+                "total_funding_needed": 5000000.0,  # 50 lakh rupees
+                "current_funding": 3200000.0,       # 32 lakh rupees
                 "expected_roi": 12.5,
                 "risk_level": "Low",
                 "owner_id": admin.id
             },
             {
-                "name": "Highland Cattle Ranch",
-                "location": "Montana, USA",
-                "description": "Premium cattle ranch producing high-quality beef with sustainable practices.",
+                "name": "Nilgiri Cattle Ranch",
+                "location": "Ooty, Tamil Nadu",
+                "description": "Premium cattle farm producing high-quality dairy with sustainable practices in the hills.",
                 "farm_type": "Livestock",
-                "size_hectares": 850.0,
+                "size_hectares": 85.0,
                 "established_date": datetime(2015, 3, 22).date(),
-                "total_funding_needed": 750000.0,
-                "current_funding": 420000.0,
+                "total_funding_needed": 7500000.0,  # 75 lakh rupees
+                "current_funding": 4200000.0,       # 42 lakh rupees
                 "expected_roi": 14.2,
                 "risk_level": "Medium",
                 "owner_id": admin.id
             },
             {
-                "name": "Sunrise Diversified Farm",
-                "location": "Iowa, USA",
-                "description": "Mixed farming operation with crops and dairy cattle. Focuses on sustainable ecosystem.",
+                "name": "Cauvery Delta Farm",
+                "location": "Thanjavur, Tamil Nadu",
+                "description": "Mixed farming operation with paddy crops and fish ponds. Focuses on sustainable ecosystem in the delta region.",
                 "farm_type": "Mixed",
-                "size_hectares": 350.0,
+                "size_hectares": 35.0,
                 "established_date": datetime(2019, 8, 10).date(),
-                "total_funding_needed": 600000.0,
-                "current_funding": 250000.0,
+                "total_funding_needed": 6000000.0,  # 60 lakh rupees
+                "current_funding": 2500000.0,  # 25 lakh rupees
                 "expected_roi": 15.8,
                 "risk_level": "Medium",
                 "owner_id": admin.id
             },
             {
-                "name": "Organic Valley Farms",
-                "location": "Oregon, USA",
-                "description": "Family-owned organic farm specializing in a variety of certified organic crops.",
+                "name": "Organic Harvest Farms",
+                "location": "Madurai, Tamil Nadu",
+                "description": "Family-owned organic farm specializing in traditional vegetable varieties and native crops.",
                 "farm_type": "Crop",
-                "size_hectares": 200.0,
+                "size_hectares": 20.0,
                 "established_date": datetime(2017, 2, 28).date(),
-                "total_funding_needed": 450000.0,
-                "current_funding": 380000.0,
+                "total_funding_needed": 4500000.0,  # 45 lakh rupees
+                "current_funding": 3800000.0,       # 38 lakh rupees
                 "expected_roi": 11.2,
                 "risk_level": "Low",
                 "owner_id": admin.id
             },
             {
-                "name": "Prairie Poultry & Grains",
-                "location": "Kansas, USA",
-                "description": "Modern farm combining poultry production with grain cultivation.",
+                "name": "Tirunelveli Agro Farms",
+                "location": "Tirunelveli, Tamil Nadu",
+                "description": "Modern farm combining poultry production with banana and coconut cultivation.",
                 "farm_type": "Mixed",
-                "size_hectares": 275.0,
+                "size_hectares": 27.5,
                 "established_date": datetime(2016, 6, 5).date(),
-                "total_funding_needed": 550000.0,
-                "current_funding": 290000.0,
+                "total_funding_needed": 5500000.0,  # 55 lakh rupees
+                "current_funding": 2900000.0,       # 29 lakh rupees
                 "expected_roi": 16.5,
                 "risk_level": "High",
                 "owner_id": admin.id
