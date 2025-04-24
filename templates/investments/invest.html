@@ -33,7 +33,7 @@
                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ opportunity.funding_percentage() }}%" aria-valuenow="{{ opportunity.funding_percentage() }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <p class="text-muted small mb-0">
-                            ${{ "%.2f"|format(opportunity.amount_raised) }} raised of ${{ "%.2f"|format(opportunity.amount_needed) }} 
+                            ₹{{ "%.2f"|format(opportunity.amount_raised) }} raised of ₹{{ "%.2f"|format(opportunity.amount_needed) }} 
                             ({{ "%.1f"|format(opportunity.funding_percentage()) }}%)
                         </p>
                     </div>
@@ -54,13 +54,13 @@
                         <div class="col-md-3 col-6">
                             <div class="bg-dark-subtle p-3 rounded text-center h-100">
                                 <small class="text-muted d-block mb-1">Min. Investment</small>
-                                <span class="d-block fs-4">${{ "%.2f"|format(opportunity.minimum_investment) }}</span>
+                                <span class="d-block fs-4">₹{{ "%.2f"|format(opportunity.minimum_investment) }}</span>
                             </div>
                         </div>
                         <div class="col-md-3 col-6">
                             <div class="bg-dark-subtle p-3 rounded text-center h-100">
                                 <small class="text-muted d-block mb-1">Available</small>
-                                <span class="d-block fs-4">${{ "%.2f"|format(remaining) }}</span>
+                                <span class="d-block fs-4">₹{{ "%.2f"|format(remaining) }}</span>
                             </div>
                         </div>
                     </div>
@@ -167,19 +167,19 @@
                     {% if current_user.is_authenticated %}
                         <form method="POST" action="{{ url_for('invest', opportunity_id=opportunity.id) }}">
                             <div class="mb-3">
-                                <label for="amount" class="form-label">Investment Amount ($)</label>
+                                <label for="amount" class="form-label">Investment Amount (₹)</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">₹</span>
                                     <input type="number" class="form-control" id="amount" name="amount" min="{{ '%.2f'|format(opportunity.minimum_investment) }}" max="{{ '%.2f'|format(remaining) }}" step="0.01" required>
                                 </div>
-                                <div class="form-text">Minimum investment: ${{ "%.2f"|format(opportunity.minimum_investment) }}</div>
+                                <div class="form-text">Minimum investment: ₹{{ "%.2f"|format(opportunity.minimum_investment) }}</div>
                             </div>
                             
                             <div class="mb-3">
                                 <label class="form-label">Expected Return</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="expected_return" readonly>
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">₹</span>
                                 </div>
                                 <div class="form-text">Based on {{ "%.1f"|format(opportunity.expected_roi) }}% ROI over {{ opportunity.duration_months }} months</div>
                             </div>
@@ -354,7 +354,7 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                                return context.dataset.label + ': ₹' + context.raw.toFixed(2);
                             }
                         }
                     }
@@ -363,12 +363,12 @@
                     y: {
                         ticks: {
                             callback: function(value) {
-                                return '$' + value;
+                                return '₹' + value;
                             }
                         },
                         title: {
                             display: true,
-                            text: 'Amount ($)'
+                            text: 'Amount (₹)'
                         }
                     }
                 }
