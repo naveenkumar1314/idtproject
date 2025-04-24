@@ -170,7 +170,7 @@
                                 <label for="amount" class="form-label">Investment Amount ($)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="amount" name="amount" min="{{ opportunity.minimum_investment }}" max="{{ remaining }}" step="10" required>
+                                    <input type="number" class="form-control" id="amount" name="amount" min="{{ '%.2f'|format(opportunity.minimum_investment) }}" max="{{ '%.2f'|format(remaining) }}" step="0.01" required>
                                 </div>
                                 <div class="form-text">Minimum investment: ${{ "%.2f"|format(opportunity.minimum_investment) }}</div>
                             </div>
@@ -433,13 +433,20 @@
         const expectedReturnInput = document.getElementById('expected_return');
         
         if (amountInput.value) {
-            const amount = parseFloat(amountInput.value);
+            // Parse the input as a float and ensure it's a valid number
+            let amount = parseFloat(amountInput.value);
+            if (isNaN(amount)) {
+                amount = 0;
+            }
+            
+            // Get ROI and duration values from the server
             const roi = {{ opportunity.expected_roi }} / 100;
             const duration = {{ opportunity.duration_months }};
             
-            // Simple ROI calculation (in reality would be more complex with compounding, etc.)
+            // Calculate expected return including the duration in months
             const expectedReturn = amount * roi;
             
+            // Format to 2 decimal places and update the input
             expectedReturnInput.value = expectedReturn.toFixed(2);
         } else {
             expectedReturnInput.value = '';

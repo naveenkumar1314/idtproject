@@ -254,11 +254,13 @@ def invest(opportunity_id):
             
             # Validate investment amount
             if amount < opportunity.minimum_investment:
-                flash(f'Minimum investment amount is ${opportunity.minimum_investment}', 'danger')
+                flash(f'Minimum investment amount is ${opportunity.minimum_investment:.2f}', 'danger')
                 return redirect(url_for('invest', opportunity_id=opportunity_id))
             
-            if amount > (opportunity.amount_needed - opportunity.amount_raised):
-                flash(f'Maximum available investment is ${opportunity.amount_needed - opportunity.amount_raised}', 'danger')
+            remaining = opportunity.amount_needed - opportunity.amount_raised
+            # Format the number to two decimal places
+            if amount > remaining:
+                flash(f'Maximum available investment is ${remaining:.2f}', 'danger')
                 return redirect(url_for('invest', opportunity_id=opportunity_id))
             
             # Create new investment
